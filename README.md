@@ -1,4 +1,6 @@
-## Azure plugin for [Certbot](https://certbot.eff.org/) client
+[![Build status](https://dlapiduz.visualstudio.com/certbot-azure/_apis/build/status/certbot-azure-Python%20package-CI)](https://dlapiduz.visualstudio.com/certbot-azure/_build/latest?definitionId=5)
+
+# Azure plugin for [Certbot](https://certbot.eff.org/) client
 
 Use the certbot client to generate and install a certificate to be used with
 an Azure App Gateway.
@@ -13,10 +15,9 @@ Before starting you need:
 
 ### Setup
 
-
 The easiest way to install both the certbot client and the certbot-azure plugin is:
 
-  ```
+  ```bash
   pip install certbot-azure
   ```
 
@@ -24,9 +25,11 @@ The easiest way to install both the certbot client and the certbot-azure plugin 
   You might also need to install `dialog`: `brew install dialog`.
 
   If you are in Ubuntu you will need to install `pip` and other libraries:
-  ```
+
+  ```bash
   apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg8-dev zlib1g-dev dialog
   ```
+
   And then run `pip install certbot-azure`.
 
 ### How to use it
@@ -41,6 +44,7 @@ az ad sp create-for-rbac \
 ```
 
 Then generate and install the certificate (this example uses Azure DNS for authentication):
+
 ```bash
 certbot -d REPLACE_WITH_YOUR_DOMAIN \
 --dns-azure --dns-azure-credentials mycredentials.json \
@@ -52,7 +56,6 @@ certbot -d REPLACE_WITH_YOUR_DOMAIN \
 
 Follow the screen prompts and you should end up with the certificate in your
 distribution. It may take a couple minutes to update.
-
 
 ### Automate renewal
 
