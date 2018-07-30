@@ -1,0 +1,27 @@
+*.pyc
+*.egg-info/
+.eggs/
+build/
+dist*/
+/venv*/
+/kgs/
+/.tox/
+certbot.log
+
+# coverage
+.coverage
+/htmlcov/
+
+/.vagrant
+
+# editor temporary files
+*~
+*.swp
+\#*#
+.idea
+
+# auth --cert-path --chain-path
+/*.pem
+.env
+.vscode
+.python-version
