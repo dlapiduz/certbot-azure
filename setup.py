@@ -12,8 +12,7 @@ install_requires = [
     'azure-mgmt-network',
     'PyOpenSSL>=17.1.0',
     'setuptools',  # pkg_resources
-    'zope.interface',
-    'boto3'
+    'zope.interface'
 ]
 
 if sys.version_info < (2, 7):
