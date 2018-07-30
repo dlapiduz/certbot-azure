@@ -8,7 +8,12 @@ import logging
 import time
 import OpenSSL
 import base64
-import secrets
+try:
+    from secrets import token_urlsafe
+except ImportError:
+    from os import urandom
+    def token_urlsafe(nbytes=None):
+        return urandom(nbytes)
 
 import zope.component
 import zope.interface
@@ -127,7 +132,7 @@ class _AzureClient(object):
         from azure.mgmt.network.models import ApplicationGatewaySslCertificate
 
         # Generate random password for pfx
-        password = secrets.token_urlsafe(16)
+        password = token_urlsafe(16)
 
         # Get app gateway from client
         agw = self.network_client.application_gateways.get(self.resource_group, agw_name)
