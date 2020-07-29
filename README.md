@@ -1,4 +1,4 @@
-[![Build status](https://dlapiduz.visualstudio.com/certbot-azure/_apis/build/status/certbot-azure-Python%20package-CI)](https://dlapiduz.visualstudio.com/certbot-azure/_build/latest?definitionId=5)
+![Build and test](https://github.com/dlapiduz/certbot-azure/workflows/Build%20and%20test/badge.svg)
 
 # Azure plugin for [Certbot](https://certbot.eff.org/) client
 
