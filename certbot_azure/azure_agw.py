@@ -34,7 +34,7 @@ ACCT_URL = MSDOCS + 'python/azure/python-sdk-azure-authenticate?view=azure-pytho
 AZURE_CLI_URL = MSDOCS + 'cli/azure/install-azure-cli?view=azure-cli-latest'
 AZURE_CLI_COMMAND = ("az ad sp create-for-rbac"
                      " --name Certbot --sdk-auth"
-                     " --scope /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP_ID"
+                     " --scope /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP_ID>"
                      " > mycredentials.json")
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,26 @@ class Installer(common.Plugin):
 
     def __init__(self, *args, **kwargs):
         super(Installer, self).__init__(*args, **kwargs)
+        self._setup_credentials()
+
         self.azure_client = _AzureClient(self.conf('resource-group'), self.conf('credentials'))
+
+
+    def _setup_credentials(self):
+        if self.conf('resource-group') is None:
+            raise errors.PluginError('Please specify a resource group using '
+                                     '--azure-agw-resource-group <RESOURCEGROUP>')
+
+        if self.conf('app-gateway-name') is None:
+            raise errors.PluginError('Please specify the app gateway name '
+                                     '--azure-agw-resource-group <RESOURCEGROUP>')
+
+        if self.conf(
+                'credentials') is None and 'AZURE_AUTH_LOCATION' not in os.environ:
+            raise errors.PluginError(
+                'Please specify credentials file using the '
+                'AZURE_AUTH_LOCATION environment variable or '
+                'using --azure-agw-credentials <file>')
 
     def prepare(self):  # pylint: disable=missing-docstring,no-self-use
         pass  # pragma: no cover
@@ -111,6 +130,16 @@ class Installer(common.Plugin):
 
     def restart(self):  # pylint: disable=missing-docstring,no-self-use
         pass  # pragma: no cover
+
+    def renew_deploy(self, lineage, *args, **kwargs): # pylint: disable=missing-docstring,no-self-use
+        """
+        Renew certificates when calling `certbot renew`
+        """
+
+        # Run deploy_cert with the lineage params
+        self.deploy_cert(lineage.names()[0], lineage.cert_path, lineage.key_path, lineage.chain_path, lineage.fullchain_path)
+
+        return
 
 
 

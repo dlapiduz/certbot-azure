@@ -37,7 +37,7 @@ class AzureClientTest(test_util.TempDirTestCase):
         return agw
 
     def setUp(self):
-        from certbot_azure.installer import _AzureClient
+        from certbot_azure.azure_agw import _AzureClient
         super(AzureClientTest, self).setUp()
 
         config_path = AzureClientConfigDummy.build_config(self.tempdir)
@@ -123,4 +123,3 @@ class AzureClientConfigDummy(object):
 
 if __name__ == "__main__":
     unittest.main()  # pragma: no cover
-

@@ -3,14 +3,15 @@ import sys
 from distutils.core import setup
 from setuptools import find_packages
 
-version = '0.0.2'
+version = '0.0.3.dev0'
 
 install_requires = [
-    'acme>=0.26.1',
-    'certbot>=0.26.0',
+    'acme>=0.29.0',
+    'certbot>=1.1.0',
     'azure-mgmt-resource',
     'azure-mgmt-network',
-    'PyOpenSSL>=17.1.0',
+    'azure-mgmt-dns>=3.0.0',
+    'PyOpenSSL>=19.1.0',
     'setuptools',  # pkg_resources
     'zope.interface'
 ]
@@ -55,7 +56,8 @@ setup(
     keywords = ['certbot', 'azure', 'app_gateway'],
     entry_points={
         'certbot.plugins': [
-            'installer = certbot_azure.installer:Installer',
+            'azure-agw = certbot_azure.azure_agw:Installer',
+            'dns-azure = certbot_azure.dns_azure:Authenticator',
         ],
     },
 )
