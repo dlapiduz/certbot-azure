@@ -3,7 +3,7 @@ import sys
 from distutils.core import setup
 from setuptools import find_packages
 
-version = '0.0.3.dev0'
+version = '0.1.0'
 
 install_requires = [
     'acme>=0.29.0',
@@ -29,8 +29,8 @@ docs_extras = [
 setup(
     name='certbot-azure',
     version=version,
-    description="Azure Installer plugin for Certbot client",
-    url='https://github.com/dlapiduz/certbot-azure-ag',
+    description="Azure plugin for Certbot client",
+    url='https://github.com/dlapiduz/certbot-azure',
     author="Diego Lapiduz",
     author_email='diego@lapiduz.com',
     license='MIT',
@@ -53,7 +53,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_requires,
-    keywords = ['certbot', 'azure', 'app_gateway'],
+    keywords = ['certbot', 'azure', 'app_gateway', 'azure_dns'],
     entry_points={
         'certbot.plugins': [
             'azure-agw = certbot_azure.azure_agw:Installer',
