@@ -9,7 +9,6 @@ from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.dns.models import RecordSet, TxtRecord
 from msrestazure.azure_exceptions import CloudError
 
-
 from certbot import errors
 from certbot import interfaces
 from certbot.plugins import dns_common
@@ -118,9 +117,11 @@ class _AzureClient(object):
             record = RecordSet(ttl=record_ttl,
                                txt_records=[TxtRecord(value=[record_content])])
             zone = self._find_managed_zone(domain)
-            relative_record_name = ".".join(
-                domain.split('.')[0:-len(zone.split('.'))])
-            self.dns_client.record_sets.create_or_update(self.resource_group,
+            relative_record_name = ".".join(domain.split('.')[0:-len(zone.split('.'))])
+
+            resource_group = self._choose_group_for_zone(zone, self.resource_group)
+
+            self.dns_client.record_sets.create_or_update(resource_group,
                                                          zone,
                                                          relative_record_name,
                                                          'TXT',
@@ -141,12 +142,25 @@ class _AzureClient(object):
             zone = self._find_managed_zone(domain)
             relative_record_name = ".".join(
                 domain.split('.')[0:-len(zone.split('.'))])
-            self.dns_client.record_sets.delete(self.resource_group,
+
+            resource_group = self._choose_group_for_zone(zone, self.resource_group)
+
+            self.dns_client.record_sets.delete(resource_group,
                                                zone,
                                                relative_record_name,
                                                'TXT')
         except (CloudError, errors.PluginError) as e:
             logger.warning('Encountered error deleting TXT record: %s', e)
+
+    def _choose_group_for_zone(self, zone, comma_separated_resource_groups):
+        resource_groups = map(lambda group: group.strip(), comma_separated_resource_groups.split(","))
+
+        for resource_group in resource_groups:
+            for zone_in_group in self.dns_client.zones.list_by_resource_group(resource_group):
+                if zone_in_group.name == zone:
+                    return resource_group
+
+        return None
 
     def _find_managed_zone(self, domain):
         """
