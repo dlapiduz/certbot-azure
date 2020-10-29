@@ -160,7 +160,7 @@ class _AzureClient(object):
                 if zone_in_group.name == zone:
                     return resource_group
 
-        return None
+        raise errors.PluginError('Error finding {0} zone in provided resource groups'.format(zone))
 
     def _find_managed_zone(self, domain):
         """
