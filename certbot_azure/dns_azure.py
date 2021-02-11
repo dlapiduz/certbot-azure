@@ -8,6 +8,7 @@ from azure.mgmt.dns import DnsManagementClient
 from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.dns.models import RecordSet, TxtRecord
 from msrestazure.azure_exceptions import CloudError
+from msrestazure.azure_active_directory import MSIAuthentication
 
 
 from certbot import errors
@@ -61,6 +62,11 @@ class Authenticator(dns_common.DNSAuthenticator):
             help=('Resource Group in which the DNS zone is located'),
             default=None)
 
+        add('managedidentity-subscription', help='DNS Zone subscription id',
+            default=None),
+        add('managedidentity-clientid', help='Use a user-assigned managed identity instead of system assigned',
+            default=None)
+
     def more_info(self):  # pylint: disable=missing-docstring,no-self-use
         return 'This plugin configures a DNS TXT record to respond to a dns-01 challenge using ' + \
                'the Azure DNS API.'
@@ -71,16 +77,23 @@ class Authenticator(dns_common.DNSAuthenticator):
                                      '--dns-azure-resource-group <RESOURCEGROUP>')
 
         if self.conf(
-                'credentials') is None and 'AZURE_AUTH_LOCATION' not in os.environ:
+                'credentials') is None and 'AZURE_AUTH_LOCATION' not in os.environ and self.conf(
+                'managedidentity-subscription') is None and \
+                self.conf('managedidentity-clientid') is None:
             raise errors.PluginError(
                 'Please specify credentials file using the '
                 'AZURE_AUTH_LOCATION environment variable or '
-                'using --dns-azure-credentials <file>')
+                'using --dns-azure-credentials <file>. To use a '
+                'system assigned managed identity use '
+                '--dns-azure-managedidentity-subscription=sub, or add '
+                '--dns-azure-managedidentity-clientid=clientid'
+                'to specify a user assigned managed identity')
         else:
-            self._configure_file('credentials',
-                                 'path to Azure DNS service account JSON file')
+            if self.conf('credentials') is not None or 'AZURE_AUTH_LOCATION' in os.environ:
+                self._configure_file('credentials',
+                                     'path to Azure DNS service account JSON file')
 
-            dns_common.validate_file_permissions(self.conf('credentials'))
+                dns_common.validate_file_permissions(self.conf('credentials'))
 
     def _perform(self, domain, validation_name, validation):
         self._get_azure_client().add_txt_record(validation_name,
@@ -92,7 +105,9 @@ class Authenticator(dns_common.DNSAuthenticator):
 
     def _get_azure_client(self):
         return _AzureClient(self.conf('resource-group'),
-                            self.conf('credentials'))
+                            self.conf('credentials'),
+                            self.conf('managedidentity-subscription'),
+                            self.conf('managedidentity-clientid'))
 
 
 class _AzureClient(object):
@@ -100,10 +115,16 @@ class _AzureClient(object):
     Encapsulates all communication with the Azure Cloud DNS API.
     """
 
-    def __init__(self, resource_group, account_json=None):
+    def __init__(self, resource_group, account_json=None, mi_subscription=None, mi_clientid=None):
         self.resource_group = resource_group
-        self.dns_client = get_client_from_auth_file(DnsManagementClient,
-                                                    auth_path=account_json)
+
+        if mi_subscription and mi_clientid:
+            self.dns_client = DnsManagementClient(MSIAuthentication(client_id=mi_clientid), mi_subscription)
+        elif mi_subscription:
+            self.dns_client = DnsManagementClient(MSIAuthentication(), mi_subscription)
+        else:
+            self.dns_client = get_client_from_auth_file(DnsManagementClient,
+                                                        auth_path=account_json)
 
     def add_txt_record(self, domain, record_content, record_ttl):
         """
