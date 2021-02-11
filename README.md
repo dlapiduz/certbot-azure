@@ -56,6 +56,32 @@ certbot certonly -d REPLACE_WITH_YOUR_DOMAIN \
 Follow the screen prompts and you should end up with the certificate in your
 distribution. It may take a couple minutes to update.
 
+### Obtaining a certificate with Azure Managed identity authentication
+
+Create a managed identity
+```bash
+az identity create -g <RESOURCE GROUP> -n <USER ASSIGNED IDENTITY NAME>
+```
+Assign it the DNS Zone Contributor role
+```bash
+az role assignment create --assignee-object-id <IDENTITY_CLIENT_ID> \
+--role "DNS Zone Contributor" 
+```
+
+Assign the managed identity to a virtual machine
+
+Then generate the certificate:
+
+```bash
+certbot certonly -d REPLACE_WITH_YOUR_DOMAIN \
+-a dns-azure --dns-azure-resource-group <REPLACE_WITH_RESOURCE_GROUP> \
+--dns-azure-managedidentity-subscription=<DNS_ZONE_SUBSCRIPTION_ID> \ 
+--dns-azure-managedidentity-clientid=<MANAGED_IDENTITY_CLIENT_ID>
+```
+
+If the `--dns-azure-managedidentity-clientid` argument is omitted, then the 
+system assigned identity will be used instead of a user assigned one.
+
 
 ### Installing a certificate to an Azure App Gateway
 
