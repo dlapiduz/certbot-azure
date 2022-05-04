@@ -7,8 +7,6 @@ import mock
 import json
 
 from certbot import errors
-from certbot.plugins import dns_test_common_lexicon
-from certbot.plugins.dns_test_common import DOMAIN
 from certbot.tests import util as test_util
 from requests import Response
 
@@ -17,7 +15,8 @@ from azure.mgmt.network.models import ApplicationGateway
 from azure.mgmt.network.models import ApplicationGatewaySslCertificate
 
 
-RESOURCE_GROUP = 'test-test-1'
+RESOURCE_GROUP = "test-test-1"
+
 
 class AzureClientTest(test_util.TempDirTestCase):
     zone = "foo.com"
@@ -38,6 +37,7 @@ class AzureClientTest(test_util.TempDirTestCase):
 
     def setUp(self):
         from certbot_azure.azure_agw import _AzureClient
+
         super(AzureClientTest, self).setUp()
 
         config_path = AzureClientConfigDummy.build_config(self.tempdir)
@@ -56,17 +56,17 @@ class AzureClientTest(test_util.TempDirTestCase):
         # pylint: disable=protected-access
         self.network_client.application_gateways.get.return_value = agw
 
-        self.azure_client.update_agw(agw.name,
-                                     "test_domain.com",
-                                     "test_key_path",
-                                     "test_cert_path")
+        self.azure_client.update_agw(
+            agw.name, "test_domain.com", "test_key_path", "test_cert_path"
+        )
 
         self.network_client.application_gateways.create_or_update.assert_called_with(
-            self.azure_client.resource_group,
-            agw.name,
-            mock.ANY)
+            self.azure_client.resource_group, agw.name, mock.ANY
+        )
 
-        updated_agw = self.network_client.application_gateways.create_or_update.call_args[0][2]
+        updated_agw = (
+            self.network_client.application_gateways.create_or_update.call_args[0][2]
+        )
 
         self.assertEqual(len(updated_agw.ssl_certificates), 1)
 
@@ -74,27 +74,27 @@ class AzureClientTest(test_util.TempDirTestCase):
         agw = self._generate_dummy_agw()
         # pylint: disable=protected-access
         self.network_client.application_gateways.get.return_value = agw
-        self.network_client.application_gateways.create_or_update.side_effect = self._getCloudError()
+        self.network_client.application_gateways.create_or_update.side_effect = (
+            self._getCloudError()
+        )
 
         with self.assertRaises(errors.PluginError):
-            self.azure_client.update_agw(agw.name,
-                                        "test_domain.com",
-                                        "test_key_path",
-                                        "test_cert_path")
+            self.azure_client.update_agw(
+                agw.name, "test_domain.com", "test_key_path", "test_cert_path"
+            )
 
     def test_update_agw_error_if_pending(self):
         agw = self._generate_dummy_agw()
         ssl = ApplicationGatewaySslCertificate()
-        ssl.provisioning_state = 'Updating'
+        ssl.provisioning_state = "Updating"
         agw.ssl_certificates = [ssl]
         # pylint: disable=protected-access
         self.network_client.application_gateways.get.return_value = agw
 
         with self.assertRaises(errors.PluginError):
-            self.azure_client.update_agw(agw.name,
-                                        "test_domain.com",
-                                        "test_key_path",
-                                        "test_cert_path")
+            self.azure_client.update_agw(
+                agw.name, "test_domain.com", "test_key_path", "test_cert_path"
+            )
 
 
 class AzureClientConfigDummy(object):
@@ -104,22 +104,26 @@ class AzureClientConfigDummy(object):
     def build_config(cls, tempdir):
         """Helper method to create dummy Azure configuration"""
 
-        config_path = os.path.join(tempdir, 'azurecreds.json')
-        with open(config_path, 'w') as outfile:
-            json.dump({
-                "clientId": "uuid",
-                "clientSecret": "uuid",
-                "subscriptionId": "uuid",
-                "tenantId": "uuid",
-                "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
-                "resourceManagerEndpointUrl": "https://management.azure.com/",
-                "activeDirectoryGraphResourceId": "https://graph.windows.net/",
-                "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
-                "galleryEndpointUrl": "https://gallery.azure.com/",
-                "managementEndpointUrl": "https://management.core.windows.net/"
-            }, outfile)
+        config_path = os.path.join(tempdir, "azurecreds.json")
+        with open(config_path, "w") as outfile:
+            json.dump(
+                {
+                    "clientId": "uuid",
+                    "clientSecret": "uuid",
+                    "subscriptionId": "uuid",
+                    "tenantId": "uuid",
+                    "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+                    "resourceManagerEndpointUrl": "https://management.azure.com/",
+                    "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+                    "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+                    "galleryEndpointUrl": "https://gallery.azure.com/",
+                    "managementEndpointUrl": "https://management.core.windows.net/",
+                },
+                outfile,
+            )
 
         return config_path
+
 
 if __name__ == "__main__":
     unittest.main()  # pragma: no cover
