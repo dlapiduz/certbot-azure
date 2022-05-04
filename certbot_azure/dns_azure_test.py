@@ -15,12 +15,12 @@ from requests import Response
 from msrestazure.azure_exceptions import CloudError
 
 
-RESOURCE_GROUP = 'test-test-1'
+RESOURCE_GROUP = "test-test-1"
 
 
-class AuthenticatorTest(test_util.TempDirTestCase,
-                        dns_test_common_lexicon.BaseLexiconAuthenticatorTest):
-
+class AuthenticatorTest(
+    test_util.TempDirTestCase, dns_test_common_lexicon.BaseLexiconAuthenticatorTest
+):
     def setUp(self):
         from certbot_azure.dns_azure import Authenticator
 
@@ -28,8 +28,9 @@ class AuthenticatorTest(test_util.TempDirTestCase,
 
         config_path = AzureClientConfigDummy.build_config(self.tempdir)
 
-        self.config = mock.MagicMock(azure_credentials=config_path,
-                                     azure_resource_group=RESOURCE_GROUP)
+        self.config = mock.MagicMock(
+            azure_credentials=config_path, azure_resource_group=RESOURCE_GROUP
+        )
 
         self.auth = Authenticator(self.config, "azure")
 
@@ -40,7 +41,9 @@ class AuthenticatorTest(test_util.TempDirTestCase,
     def test_perform(self):
         self.auth.perform([self.achall])
 
-        expected = [mock.call.add_txt_record('_acme-challenge.'+DOMAIN, mock.ANY, mock.ANY)]
+        expected = [
+            mock.call.add_txt_record("_acme-challenge." + DOMAIN, mock.ANY, mock.ANY)
+        ]
         self.assertEqual(expected, self.mock_client.mock_calls)
 
     def test_cleanup(self):
@@ -48,7 +51,7 @@ class AuthenticatorTest(test_util.TempDirTestCase,
         self.auth._attempt_cleanup = True
         self.auth.cleanup([self.achall])
 
-        expected = [mock.call.del_txt_record('_acme-challenge.'+DOMAIN)]
+        expected = [mock.call.del_txt_record("_acme-challenge." + DOMAIN)]
         self.assertEqual(expected, self.mock_client.mock_calls)
 
 
@@ -65,6 +68,7 @@ class AzureClientTest(test_util.TempDirTestCase):
 
     def setUp(self):
         from certbot_azure.dns_azure import _AzureClient
+
         super(AzureClientTest, self).setUp()
 
         config_path = AzureClientConfigDummy.build_config(self.tempdir)
@@ -80,16 +84,17 @@ class AzureClientTest(test_util.TempDirTestCase):
         # pylint: disable=protected-access
         self.azure_client._find_managed_zone.return_value = self.zone
 
-        self.azure_client.add_txt_record(self.record_name + "." + self.zone,
-                                         self.record_content,
-                                         self.record_ttl)
+        self.azure_client.add_txt_record(
+            self.record_name + "." + self.zone, self.record_content, self.record_ttl
+        )
 
         self.dns_client.record_sets.create_or_update.assert_called_with(
-                                        self.azure_client.resource_group,
-                                        self.zone,
-                                        self.record_name,
-                                        'TXT',
-                                        mock.ANY)
+            self.azure_client.resource_group,
+            self.zone,
+            self.record_name,
+            "TXT",
+            mock.ANY,
+        )
 
         record = self.dns_client.record_sets.create_or_update.call_args[0][4]
 
@@ -103,9 +108,9 @@ class AzureClientTest(test_util.TempDirTestCase):
         self.dns_client.record_sets.create_or_update.side_effect = self._getCloudError()
 
         with self.assertRaises(errors.PluginError):
-            self.azure_client.add_txt_record(self.record_name + "." + self.zone,
-                                             self.record_content,
-                                             self.record_ttl)
+            self.azure_client.add_txt_record(
+                self.record_name + "." + self.zone, self.record_content, self.record_ttl
+            )
 
     def test_add_txt_record_zone_not_found(self):
         # pylint: disable=protected-access
@@ -114,9 +119,9 @@ class AzureClientTest(test_util.TempDirTestCase):
         self.azure_client._find_managed_zone.side_effect = self._getCloudError()
 
         with self.assertRaises(errors.PluginError):
-            self.azure_client.add_txt_record(self.record_name + "." + self.zone,
-                                             self.record_content,
-                                             self.record_ttl)
+            self.azure_client.add_txt_record(
+                self.record_name + "." + self.zone, self.record_content, self.record_ttl
+            )
 
     def test_del_txt_record(self):
         # pylint: disable=protected-access
@@ -124,10 +129,10 @@ class AzureClientTest(test_util.TempDirTestCase):
 
         self.azure_client.del_txt_record(self.record_name + "." + self.zone)
 
-        self.dns_client.record_sets.delete.assert_called_with(self.azure_client.resource_group,
-                                                              self.zone,
-                                                              self.record_name,
-                                                              'TXT')
+        self.dns_client.record_sets.delete.assert_called_with(
+            self.azure_client.resource_group, self.zone, self.record_name, "TXT"
+        )
+
     def test_del_txt_record_no_zone(self):
         # pylint: disable=protected-access
         self.azure_client._find_managed_zone.return_value = None
@@ -146,24 +151,28 @@ class AzureClientConfigDummy(object):
     def build_config(cls, tempdir):
         """Helper method to create dummy Azure configuration"""
 
-        config_path = os.path.join(tempdir, 'azurecreds.json')
-        with open(config_path, 'w') as outfile:
-            json.dump({
-                "clientId": "uuid",
-                "clientSecret": "uuid",
-                "subscriptionId": "uuid",
-                "tenantId": "uuid",
-                "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
-                "resourceManagerEndpointUrl": "https://management.azure.com/",
-                "activeDirectoryGraphResourceId": "https://graph.windows.net/",
-                "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
-                "galleryEndpointUrl": "https://gallery.azure.com/",
-                "managementEndpointUrl": "https://management.core.windows.net/"
-            }, outfile)
+        config_path = os.path.join(tempdir, "azurecreds.json")
+        with open(config_path, "w") as outfile:
+            json.dump(
+                {
+                    "clientId": "uuid",
+                    "clientSecret": "uuid",
+                    "subscriptionId": "uuid",
+                    "tenantId": "uuid",
+                    "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+                    "resourceManagerEndpointUrl": "https://management.azure.com/",
+                    "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+                    "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+                    "galleryEndpointUrl": "https://gallery.azure.com/",
+                    "managementEndpointUrl": "https://management.core.windows.net/",
+                },
+                outfile,
+            )
 
         os.chmod(config_path, 0o600)
 
         return config_path
+
 
 if __name__ == "__main__":
     unittest.main()  # pragma: no cover
