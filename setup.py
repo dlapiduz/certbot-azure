@@ -3,11 +3,13 @@ import sys
 from distutils.core import setup
 from setuptools import find_packages
 
-version = "0.1.1"
+version = "0.2.0"
 
 install_requires = [
     "acme>=0.29.0",
     "certbot>=1.1.0",
+    "msrestazure",
+    "azure-identity",
     "azure-mgmt-resource",
     "azure-mgmt-network",
     "azure-mgmt-dns>=3.0.0",
