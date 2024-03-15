@@ -1,11 +1,12 @@
 """DNS Authenticator for Azure DNS."""
+import json
 import logging
 import os
 
 import zope.interface
 
+from azure.identity import ClientSecretCredential
 from azure.mgmt.dns import DnsManagementClient
-from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.dns.models import RecordSet, TxtRecord
 from msrestazure.azure_exceptions import CloudError
 
@@ -102,8 +103,21 @@ class _AzureClient(object):
 
     def __init__(self, resource_group, account_json=None):
         self.resource_group = resource_group
-        self.dns_client = get_client_from_auth_file(DnsManagementClient,
-                                                    auth_path=account_json)
+        with open(account_json) as json_file:
+            json_dict = json.load(json_file)
+
+        credential = ClientSecretCredential(
+            tenant_id = json_dict["tenantId"],
+            client_id = json_dict["clientId"],
+            client_secret = json_dict["clientSecret"],
+            authority=json_dict["activeDirectoryEndpointUrl"],
+        )
+        self.dns_client = DnsManagementClient(
+            credential,
+            json_dict["subscriptionId"],
+            base_url=json_dict["resourceManagerEndpointUrl"],
+            credential_scopes=["{}/.default".format(json_dict["resourceManagerEndpointUrl"])],
+        )
 
     def add_txt_record(self, domain, record_content, record_ttl):
         """
@@ -161,7 +175,7 @@ class _AzureClient(object):
             azure_zones = self.dns_client.zones.list()  # TODO - catch errors
             azure_zones_list = []
             while True:
-                for zone in azure_zones.current_page:
+                for zone in azure_zones:
                     azure_zones_list.append(zone.name)
                 azure_zones.next()
         except StopIteration:
